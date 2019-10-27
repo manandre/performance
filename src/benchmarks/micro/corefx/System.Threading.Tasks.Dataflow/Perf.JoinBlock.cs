@@ -51,5 +51,17 @@ namespace System.Threading.Tasks.Dataflow.Tests
                 ReceiveAsync()
             );
         }
+
+#if !NETCOREAPP2_1 && !NETCOREAPP2_2 && !NETFRAMEWORK
+        [Benchmark(OperationsPerInvoke = MessagesCount)]
+        public async Task SendAsyncTwiceReceiveAllAsyncOnceParallel()
+        {
+            await Task.WhenAll(
+                SendAsync(block.Target1),
+                SendAsync(block.Target2),
+                ReceiveAllAsync()
+            );
+        }
+#endif
     }
 }

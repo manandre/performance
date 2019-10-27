@@ -37,5 +37,10 @@ namespace System.Threading.Tasks.Dataflow.Tests
 
             await Task.WhenAll(action1.Completion, action2.Completion);
         }
+
+#if !NETCOREAPP2_1 && !NETCOREAPP2_2 && !NETFRAMEWORK
+        public override Task SendReceiveAllAsyncSequential() => throw new NotSupportedException();
+        public override Task SendReceiveAllAsyncParallel() => throw new NotSupportedException();
+#endif
     }
 }
