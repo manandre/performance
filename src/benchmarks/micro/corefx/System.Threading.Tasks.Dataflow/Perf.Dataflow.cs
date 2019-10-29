@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Linq;
 using BenchmarkDotNet.Attributes;
 using MicroBenchmarks;
 
@@ -173,5 +174,27 @@ namespace System.Threading.Tasks.Dataflow.Tests
         {
             await Task.WhenAll(SendAsync(block), ReceiveAsync(block));
         }
+    }
+
+    [BenchmarkCategory(Categories.CoreFX)]
+    public abstract class MultiTargetReceivableSourceBlockPerfTests<T, U> : ReceivableSourceBlockPerfTests<T, U> where T : IReceivableSourceBlock<U>
+    {
+        protected abstract ITargetBlock<int>[] Targets { get; }
+
+        protected Task Post() => Task.WhenAll(Targets.Select(target => Post(target)));
+        protected Task SendAsync() => Task.WhenAll(Targets.Select(target => SendAsync(target)));
+
+        [Benchmark(OperationsPerInvoke = MessagesCount)]
+        public Task PostMultiReceiveOnceParallel() => Task.WhenAll(Post(), Receive());
+
+        [Benchmark(OperationsPerInvoke = MessagesCount)]
+        public Task PostMultiTryReceiveOnceParallel() => Task.WhenAll(Post(), TryReceive());
+
+        [Benchmark(OperationsPerInvoke = MessagesCount)]
+        public Task PostMultiTryReceiveAllOnceParallel() => Task.WhenAll(Post(), TryReceiveAll());
+
+        [Benchmark(OperationsPerInvoke = MessagesCount)]
+        public Task SendAsyncMultiReceiveOnceParallel() => Task.WhenAll(SendAsync(), Receive());
+
     }
 }
