@@ -78,6 +78,13 @@ namespace System.Threading.Tasks.Dataflow.Tests
             }
             await source.Completion;
         }
+
+#if !NETCOREAPP2_1 && !NETCOREAPP2_2 && !NETFRAMEWORK
+        protected static async Task ReceiveAllAsync<U>(ISourceBlock<U> source)
+        {
+            await foreach (var item in source.ReceiveAllAsync()) ;
+        }
+#endif
     }
 
     [BenchmarkCategory(Categories.CoreFX)]
@@ -86,6 +93,10 @@ namespace System.Threading.Tasks.Dataflow.Tests
         protected virtual int ReceiveSize { get; } = 1;
         protected virtual Task Receive() => Receive(block, ReceiveSize);
         protected virtual Task ReceiveAsync() => ReceiveAsync(block, ReceiveSize);
+
+#if !NETCOREAPP2_1 && !NETCOREAPP2_2 && !NETFRAMEWORK
+        protected virtual Task ReceiveAllAsync() => ReceiveAllAsync(block);
+#endif
     }
 
     [BenchmarkCategory(Categories.CoreFX)]
@@ -112,6 +123,10 @@ namespace System.Threading.Tasks.Dataflow.Tests
         protected Task Receive() => Receive(block, ReceiveSize);
         protected Task ReceiveAsync() => ReceiveAsync(block, ReceiveSize);
 
+#if !NETCOREAPP2_1 && !NETCOREAPP2_2 && !NETFRAMEWORK
+        protected Task ReceiveAllAsync() => ReceiveAllAsync(block);
+#endif
+
         [Benchmark(OperationsPerInvoke = MessagesCount)]
         public async Task PostReceiveSequential()
         {
@@ -131,6 +146,21 @@ namespace System.Threading.Tasks.Dataflow.Tests
         {
             await Task.WhenAll(SendAsync(), ReceiveAsync());
         }
+
+#if !NETCOREAPP2_1 && !NETCOREAPP2_2 && !NETFRAMEWORK
+        [Benchmark(OperationsPerInvoke = MessagesCount)]
+        public virtual async Task SendReceiveAllAsyncSequential()
+        {
+            await SendAsync();
+            await ReceiveAllAsync();
+        }
+
+        [Benchmark(OperationsPerInvoke = MessagesCount)]
+        public virtual async Task SendReceiveAllAsyncParallel()
+        {
+            await Task.WhenAll(SendAsync(), ReceiveAllAsync());
+        }
+#endif
     }
 
     [BenchmarkCategory(Categories.CoreFX)]
@@ -174,6 +204,14 @@ namespace System.Threading.Tasks.Dataflow.Tests
         {
             await Task.WhenAll(SendAsync(block), ReceiveAsync(block));
         }
+
+#if !NETCOREAPP2_1 && !NETCOREAPP2_2 && !NETFRAMEWORK
+        [Benchmark(OperationsPerInvoke = MessagesCount)]
+        public async Task SendReceiveAllAsyncParallel()
+        {
+            await Task.WhenAll(SendAsync(block), ReceiveAllAsync(block));
+        }
+#endif
     }
 
     [BenchmarkCategory(Categories.CoreFX)]
@@ -215,5 +253,9 @@ namespace System.Threading.Tasks.Dataflow.Tests
         [Benchmark(OperationsPerInvoke = MessagesCount)]
         public Task SendAsyncMultiReceiveOnceParallel() => Task.WhenAll(SendAsync(), ReceiveAsync());
 
+#if !NETCOREAPP2_1 && !NETCOREAPP2_2 && !NETFRAMEWORK
+        [Benchmark(OperationsPerInvoke = MessagesCount)]
+        public Task SendAsyncMultiReceiveAllAsyncOnceParallel() => Task.WhenAll(SendAsync(), ReceiveAllAsync());
+#endif
     }
 }
