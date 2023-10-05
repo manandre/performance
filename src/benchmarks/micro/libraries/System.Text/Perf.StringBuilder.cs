@@ -4,6 +4,7 @@
 
 using BenchmarkDotNet.Attributes;
 using MicroBenchmarks;
+using System.Collections.Generic;
 
 namespace System.Text.Tests
 {
@@ -194,6 +195,37 @@ namespace System.Text.Tests
             {
                 builder.Append($"{guid} {dateTime} {timeSpan} {dateTimeOffset}");
             }
+
+            return builder;
+        }
+
+        public record DataObject(object Value)
+        {
+            public override string ToString() => Value is null ? "<null>" : $"{ Value.GetType().Name } : { Value }";
+        }
+
+        public IEnumerable<object> Append_Object_Data()
+        {
+            yield return new DataObject(null);
+            yield return new DataObject("");
+            yield return new DataObject("1234567890");
+            yield return new DataObject('A');
+            yield return new DataObject(42);
+            yield return new DataObject(new Rune('A'));
+            yield return new DataObject(new Version(1, 2, 3, 4));
+        }
+
+        [Benchmark]
+        [ArgumentsSource(nameof(Append_Object_Data))]
+        public StringBuilder Append_Object(DataObject data)
+        {
+            var builder = new StringBuilder();
+            object value = data.Value;
+
+            builder.Append(value); builder.Append(value); builder.Append(value); builder.Append(value);
+            builder.Append(value); builder.Append(value); builder.Append(value); builder.Append(value);
+            builder.Append(value); builder.Append(value); builder.Append(value); builder.Append(value);
+            builder.Append(value); builder.Append(value); builder.Append(value); builder.Append(value);
 
             return builder;
         }
